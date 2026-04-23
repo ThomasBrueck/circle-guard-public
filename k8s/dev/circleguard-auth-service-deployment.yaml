@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: circleguard-auth-service
+  namespace: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: circleguard-auth-service
+  template:
+    metadata:
+      labels:
+        app: circleguard-auth-service
+    spec:
+      containers:
+      - name: circleguard-auth-service
+        image: circle-guard/circleguard-auth-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8180
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "dev"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: circleguard-auth-service
+  namespace: dev
+spec:
+  selector:
+    app: circleguard-auth-service
+  ports:
+  - port: 80
+    targetPort: 8180

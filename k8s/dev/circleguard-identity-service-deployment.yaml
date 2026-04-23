@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: circleguard-identity-service
+  namespace: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: circleguard-identity-service
+  template:
+    metadata:
+      labels:
+        app: circleguard-identity-service
+    spec:
+      containers:
+      - name: circleguard-identity-service
+        image: circle-guard/circleguard-identity-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8083
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "dev"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: circleguard-identity-service
+  namespace: dev
+spec:
+  selector:
+    app: circleguard-identity-service
+  ports:
+  - port: 80
+    targetPort: 8083

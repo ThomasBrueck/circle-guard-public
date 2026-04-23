@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: circleguard-form-service
+  namespace: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: circleguard-form-service
+  template:
+    metadata:
+      labels:
+        app: circleguard-form-service
+    spec:
+      containers:
+      - name: circleguard-form-service
+        image: circle-guard/circleguard-form-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8086
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "dev"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: circleguard-form-service
+  namespace: dev
+spec:
+  selector:
+    app: circleguard-form-service
+  ports:
+  - port: 80
+    targetPort: 8086

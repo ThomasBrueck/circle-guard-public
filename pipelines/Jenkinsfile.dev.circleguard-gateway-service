@@ -1,0 +1,51 @@
+pipeline {
+    agent any
+    environment {
+        SERVICE_NAME = "circleguard-gateway-service"
+        IMAGE_NAME   = "circle-guard/circleguard-gateway-service"
+        IMAGE_TAG    = "${env.BUILD_NUMBER}"
+        K8S_NS       = "dev"
+    }
+    stages {
+        stage('Checkout') {
+            steps { checkout scm }
+        }
+        stage('Build Docker Image') {
+            steps {
+                dir("services/${SERVICE_NAME}") {
+                    sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
+                    # Tag as latest for Minikube cache access
+                    sh "docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest"
+                }
+            }
+        }
+        stage('Unit Tests') {
+            steps {
+                dir("services/${SERVICE_NAME}") {
+                    sh "docker run --rm -v ${WORKSPACE}/services/${SERVICE_NAME}:/app -w /app eclipse-temurin:21-jdk-alpine ./gradlew test"
+                }
+            }
+            post {
+                always {
+                    junit "services/${SERVICE_NAME}/build/test-results/**/*.xml"
+                }
+            }
+        }
+        stage('Deploy to Dev K8s') {
+            steps {
+                sh "kubectl create namespace ${K8S_NS} --dry-run=client -o yaml | kubectl apply -f -"
+                sh "kubectl apply -f k8s/dev/${SERVICE_NAME}-deployment.yaml -n ${K8S_NS}"
+                sh "kubectl set image deployment/${SERVICE_NAME} ${SERVICE_NAME}=${IMAGE_NAME}:${IMAGE_TAG} -n ${K8S_NS}"
+                sh "kubectl rollout status deployment/${SERVICE_NAME} -n ${K8S_NS} --timeout=120s"
+            }
+        }
+    }
+    post {
+        failure {
+            echo "Pipeline FALLÓ para ${SERVICE_NAME}"
+        }
+        success {
+            echo "Pipeline DEV completado para ${SERVICE_NAME}"
+        }
+    }
+}
