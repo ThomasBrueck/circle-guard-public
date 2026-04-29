@@ -47,6 +47,9 @@ web-build/
 pgdata/
 neo4jdata/
 
+# Binarios descargados por setup-infra.sh
+bin/
+
 
 
 
