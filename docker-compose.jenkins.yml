@@ -2,9 +2,7 @@ version: '3.8'
 
 services:
   jenkins:
-    build:
-      context: .
-      dockerfile: Dockerfile.jenkins
+    image: jenkins/jenkins:lts
     container_name: jenkins
     user: root
     ports:
@@ -19,6 +17,7 @@ services:
       - ./bin/minikube:/usr/local/bin/minikube:ro
     environment:
       - KUBECONFIG=${HOME}/.kube/config
+      - DOCKER_HOST=unix:///var/run/docker.sock
 
 volumes:
   jenkins_home:
