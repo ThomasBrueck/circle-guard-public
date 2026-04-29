@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins
+    user: root
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${HOME}/.kube:${HOME}/.kube
+      - ${HOME}/.minikube:${HOME}/.minikube
+      - ./bin/kubectl:/usr/local/bin/kubectl:ro
+      - ./bin/minikube:/usr/local/bin/minikube:ro
+    environment:
+      - KUBECONFIG=${HOME}/.kube/config
+
+volumes:
+  jenkins_home:

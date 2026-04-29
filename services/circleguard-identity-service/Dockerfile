@@ -1,13 +1,13 @@
 FROM eclipse-temurin:21-jdk-alpine AS builder
 WORKDIR /app
-COPY build.gradle.kts settings.gradle.kts gradlew ./
+COPY gradlew settings.gradle.kts build.gradle.kts ./
 COPY gradle ./gradle
-COPY src ./src
-# Fallback to general gradle build if wrapper doesn't work correctly
-RUN ./gradlew build -x test || gradle build -x test
+COPY services/circleguard-identity-service/build.gradle.kts services/circleguard-identity-service/build.gradle.kts
+COPY services/circleguard-identity-service/src services/circleguard-identity-service/src/
+RUN chmod +x gradlew && ./gradlew :services:circleguard-identity-service:bootJar -x test
 
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
-COPY --from=builder /app/build/libs/*.jar app.jar
+COPY --from=builder /app/services/circleguard-identity-service/build/libs/*.jar app.jar
 EXPOSE 8083
 ENTRYPOINT ["java", "-jar", "app.jar"]
