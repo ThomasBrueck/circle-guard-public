@@ -38,7 +38,7 @@ pipeline {
                     docker rm -f test-runner-${IMAGE_TAG} 2>/dev/null || true
                     docker run --name test-runner-${IMAGE_TAG} \
                         ${IMAGE_NAME}:builder-${IMAGE_TAG} \
-                        ./gradlew :services:${SERVICE_NAME}:test; TEST_EXIT=\$?
+                        ./gradlew :services:${SERVICE_NAME}:test --no-daemon; TEST_EXIT=\$?
                     mkdir -p test-results
                     docker cp test-runner-${IMAGE_TAG}:/app/services/${SERVICE_NAME}/build/test-results/. test-results/ || true
                     docker rm test-runner-${IMAGE_TAG} || true
