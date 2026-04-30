@@ -13,12 +13,12 @@ services:
     volumes:
       - jenkins_home:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
-      - ${HOME}/.kube:${HOME}/.kube
-      - ${HOME}/.minikube:${HOME}/.minikube
+      - ${HOME}/.kube:/root/.kube
+      - ${HOME}/.minikube:/root/.minikube
       - ./bin/kubectl:/usr/local/bin/kubectl:ro
       - ./bin/minikube:/usr/local/bin/minikube:ro
     environment:
-      - KUBECONFIG=${HOME}/.kube/config
+      - KUBECONFIG=/root/.kube/config
       - DOCKER_HOST=unix:///var/run/docker.sock
 
 volumes:
