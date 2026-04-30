@@ -11,7 +11,7 @@ pipeline {
             steps {
                 checkout scm
                 dir('app') {
-                    git url: 'https://github.com/ThomasBrueck/circle-guard-public-dev', branch: 'main'
+                    git url: 'https://github.com/ThomasBrueck/circle-guard-public-dev', branch: 'master'
                 }
             }
         }
