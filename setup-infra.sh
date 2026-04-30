@@ -25,7 +25,8 @@ fi
 echo "=== Levantando infraestructura (DBs, Kafka, Redis, LDAP) ==="
 docker compose -f docker-compose.dev.yml up -d
 
-echo "=== Levantando Jenkins ==="
+echo "=== Construyendo y levantando Jenkins ==="
+docker compose -f docker-compose.jenkins.yml build
 docker compose -f docker-compose.jenkins.yml up -d
 
 echo "=== Iniciando Minikube ==="
