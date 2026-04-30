@@ -35,6 +35,7 @@ pipeline {
                         -f services/${SERVICE_NAME}/Dockerfile \
                         -t ${IMAGE_NAME}:builder-${IMAGE_TAG} \
                         app/
+                    docker rm -f test-runner-${IMAGE_TAG} 2>/dev/null || true
                     docker run --name test-runner-${IMAGE_TAG} \
                         ${IMAGE_NAME}:builder-${IMAGE_TAG} \
                         ./gradlew :services:${SERVICE_NAME}:test; TEST_EXIT=\$?
