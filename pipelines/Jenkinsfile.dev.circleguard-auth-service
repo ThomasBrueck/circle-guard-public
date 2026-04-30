@@ -39,7 +39,7 @@ pipeline {
                         ${IMAGE_NAME}:builder-${IMAGE_TAG} \
                         ./gradlew :services:${SERVICE_NAME}:test; TEST_EXIT=\$?
                     mkdir -p test-results
-                    docker cp test-runner-${IMAGE_TAG}:/app/services/${SERVICE_NAME}/build/test-results test-results/ || true
+                    docker cp test-runner-${IMAGE_TAG}:/app/services/${SERVICE_NAME}/build/test-results/. test-results/ || true
                     docker rm test-runner-${IMAGE_TAG} || true
                     exit \$TEST_EXIT
                 """
