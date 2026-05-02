@@ -54,6 +54,11 @@ pipeline {
         stage('Integration Tests') {
             steps {
                 sh """
+                    INT_COUNT=\$(find app/services/${SERVICE_NAME}/src/test -name "*IntegrationTest.java" 2>/dev/null | wc -l)
+                    if [ "\$INT_COUNT" -eq 0 ]; then
+                        echo "No integration tests found for ${SERVICE_NAME}, skipping"
+                        exit 0
+                    fi
                     docker rm -f int-runner-${IMAGE_TAG} 2>/dev/null || true
                     docker run --name int-runner-${IMAGE_TAG} \\
                         ${IMAGE_NAME}:builder-${IMAGE_TAG} \\
@@ -61,9 +66,6 @@ pipeline {
                     rm -rf integration-results && mkdir -p integration-results
                     docker cp int-runner-${IMAGE_TAG}:/app/services/${SERVICE_NAME}/build/test-results/test/. integration-results/ || true
                     docker rm int-runner-${IMAGE_TAG} || true
-                    if [ \$INT_EXIT -ne 0 ]; then
-                        echo "--- Integration test container output ---"
-                    fi
                     exit \$INT_EXIT
                 """
             }
@@ -76,6 +78,11 @@ pipeline {
         stage('E2E Tests') {
             steps {
                 sh """
+                    E2E_COUNT=\$(find app/services/${SERVICE_NAME}/src/test -name "*E2ETest.java" 2>/dev/null | wc -l)
+                    if [ "\$E2E_COUNT" -eq 0 ]; then
+                        echo "No E2E tests found for ${SERVICE_NAME}, skipping"
+                        exit 0
+                    fi
                     docker rm -f e2e-runner-${IMAGE_TAG} 2>/dev/null || true
                     docker run --name e2e-runner-${IMAGE_TAG} \\
                         ${IMAGE_NAME}:builder-${IMAGE_TAG} \\
