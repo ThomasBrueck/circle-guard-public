@@ -60,7 +60,12 @@ pipeline {
                         --label "dev-commit=${env.DEV_COMMIT}" \\
                         --label "build-number=${IMAGE_TAG}" \\
                         app/
-                    minikube image load ${IMAGE_NAME}:${IMAGE_TAG}
+                    if minikube image ls 2>/dev/null | grep -qF "${IMAGE_NAME}:${env.DEV_COMMIT}"; then
+                        echo "Imagen ${env.DEV_COMMIT} ya en minikube, omitiendo carga"
+                    else
+                        docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:${env.DEV_COMMIT}
+                        minikube image load ${IMAGE_NAME}:${env.DEV_COMMIT}
+                    fi
                 """
             }
         }
@@ -114,7 +119,7 @@ pipeline {
                 // Aplicar manifiesto (referencia secretKeyRef, no valores inline)
                 sh "kubectl apply -f k8s/stage/${SERVICE_NAME}-deployment.yaml"
                 // Tag inmutable: solo BUILD_NUMBER, nunca latest en stage
-                sh "kubectl set image deployment/${SERVICE_NAME} ${SERVICE_NAME}=${IMAGE_NAME}:${IMAGE_TAG} -n ${K8S_NS}"
+                sh "kubectl set image deployment/${SERVICE_NAME} ${SERVICE_NAME}=${IMAGE_NAME}:${env.DEV_COMMIT} -n ${K8S_NS}"
                 sh "kubectl rollout status deployment/${SERVICE_NAME} -n ${K8S_NS} --timeout=600s"
             }
         }
@@ -126,16 +131,16 @@ pipeline {
                     NODE_PORT=\$(kubectl get svc ${SERVICE_NAME} -n ${K8S_NS} -o jsonpath='{.spec.ports[0].nodePort}')
                     STAGE_URL="http://\${MINIKUBE_IP}:\${NODE_PORT}"
                     echo "Smoke test contra K8s desplegado: \${STAGE_URL}"
-                    for i in 1 2 3 4 5; do
+                    for i in 1 2 3; do
                         STATUS=\$(curl -s -o /dev/null -w "%{http_code}" "\${STAGE_URL}/actuator/health" || echo "000")
                         if [ "\$STATUS" = "200" ]; then
                             echo "Smoke test OK: /actuator/health HTTP 200"
                             exit 0
                         fi
-                        echo "Intento \$i: status=\${STATUS}, reintentando en 15s..."
-                        sleep 15
+                        echo "Intento \$i: status=\${STATUS}, reintentando en 5s..."
+                        sleep 5
                     done
-                    echo "FALLO: el servicio no respondió saludable tras 5 intentos"
+                    echo "FALLO: el servicio no respondió saludable tras 3 intentos"
                     exit 1
                 """
             }
