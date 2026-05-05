@@ -4,12 +4,12 @@ metadata:
   name: circleguard-gateway-service
   namespace: stage
 spec:
-  replicas: 2
+  replicas: 1
   strategy:
     type: RollingUpdate
     rollingUpdate:
       maxUnavailable: 1
-      maxSurge: 1
+      maxSurge: 0
   selector:
     matchLabels:
       app: circleguard-gateway-service
