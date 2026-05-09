@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: circleguard-dashboard-service
+  namespace: production
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: circleguard-dashboard-service
+  template:
+    metadata:
+      labels:
+        app: circleguard-dashboard-service
+    spec:
+      containers:
+      - name: circleguard-dashboard-service
+        image: circle-guard/circleguard-dashboard-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8084
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        readinessProbe:
+          tcpSocket:
+            port: 8084
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          failureThreshold: 12
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8084
+          initialDelaySeconds: 30
+          periodSeconds: 15
+          failureThreshold: 5
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "production"
+        - name: SPRING_DATASOURCE_URL
+          value: "jdbc:postgresql://host.minikube.internal:5434/circleguard_dashboard"
+        - name: SPRING_DATASOURCE_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: circleguard-production-secrets
+              key: DB_USERNAME
+        - name: SPRING_DATASOURCE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: circleguard-production-secrets
+              key: DB_PASSWORD
+        - name: MANAGEMENT_HEALTH_DATASOURCE_ENABLED
+          value: "false"
+        - name: MANAGEMENT_HEALTH_LDAP_ENABLED
+          value: "false"
+        - name: MANAGEMENT_HEALTH_KAFKA_ENABLED
+          value: "false"
+        - name: MANAGEMENT_HEALTH_MAIL_ENABLED
+          value: "false"
+        - name: MANAGEMENT_HEALTH_REDIS_ENABLED
+          value: "false"
+        - name: MANAGEMENT_HEALTH_DISKSPACE_ENABLED
+          value: "false"
+        - name: SPRING_MAIN_LAZY_INITIALIZATION
+          value: "true"
+        - name: SPRING_DATASOURCE_HIKARI_INITIALIZATION_FAIL_TIMEOUT
+          value: "0"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: circleguard-dashboard-service
+  namespace: production
+spec:
+  selector:
+    app: circleguard-dashboard-service
+  type: NodePort
+  ports:
+  - port: 80
+    targetPort: 8084
